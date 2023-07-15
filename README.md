@@ -106,6 +106,66 @@ Over-fitting/high-variance problems.
             - otherwise investigate
             - $10^{-3}$ : WORRY$
 
+***
+### Optimization Algorithms
+- Batch vs miniu-batch gradient decent
+    - $X^{\{i\}}$ and $Y^{\{i\}}$ - $i^{th}$ mini-batch input and output
+    - one cycle of processing (forward, backward propagation) of all mini-batches (say 1,000 records out of 5M) is called "1 epoch"
+    - stochastic gradient decent: size of mini-batch is 1, $(X^{\{1\}}, Y^{\{1\}}) = (x^{(1)}, y^{(1)}), ...$
+        - does not copnverge well
+    - minhi-batch should be in between 1 and 'm'
+    - mini-batch size
+        - smal training set, < 1000 training set : go batch gradient descent
+        - otherwise go in mini-batch increment in exponent of 2: 64, 128, ..., 512; for very large go even 1024
+            - mini-batch size has to fit into CPU/GPU and memory
+- Expotentially weighted (moving) averages
+    - $V_t = \beta*V_{t-1} + (1-\beta)*\theta_t$
+    - $V_{\theta} = \beta*V_{\theta} + (1-\beta)*\theta_t$ (keep updating $V_{\theta}$ latest value)
+        - just keep updating, does not require large amount of memory to store all the data points amnd compute straight average)
+    - most common value is $\beta = 0.9$ whichis average over 10 time periods (like temperature over days)
+    - Bias Corection $V_t = \frac{V_t}{1-\beta^{t}}$
+    - It is usually not in used in practice due to the fact that over number of points (like 10 points in $\beta = 0.9$, it stabilizes)
+- Gradient descent with momentum
+    - $v_{dW} = \beta*V_{dW} + (1 - \beta)*dW$
+    - $v_{db} = \beta*V_{db} + (1 - \beta)*db$
+    - and use it in 
+        - $W = W - \alpha * v_{dW}$
+        - $b = b - \alpha * v_{db}$
+    - (think of it as $v_{dW}, v_{db}$ are velocity and $\beta$ as friction)
+- RMSprop
+    - RMS - root means square
+    - $S_{dW} = \beta S_{dW} + (1 - \beta) {dW}^2$ - element-wise square
+    - $S_{db} = \beta S_{db} + (1 - \beta) {db}^2$ - element-wise square
+    - and use it in 
+        - $W = W - \alpha \frac{dW}{\sqrt{S_{dW}}}$
+        - $b = b - \alpha \frac{db}{\sqrt{S_{db}}}$
+- Adam optimization
+    - "adaptive moment estimation" - combines Momentum and RSMprop optimization
+    - commonly used gradient optimization algorithm for neural networks and different architectures
+    - initialize $V_{dW} = 0, S_{dW} = 0, V_{db} = 09, S_{db} = 0$
+    - for iteration $t$:
+        - momentum: $V_{dW} = \beta_{1} V_{dW} + (1 - \beta_{1}) dW, V_{db} = \beta_{1} V_{db} + (1 - \beta_{1}) db$
+        - RMSprop: $S_{dW} = \beta_{2} S_{dW} + (1 - \beta_{2}) dW, S_{db} = \beta_{2} S_{db} + (1 - \beta_{2}) db$
+        - bias correction:
+        - $V_{dW}^{corrected} = \frac{V_{dW}}{1-\beta_{1}^{t}}, V_{db}^{corrected} = \frac{V_{db}}{1-\beta_{1}^{t}}$
+        - $S_{dW}^{corrected} = \frac{S_{dW}}{1-\beta_{2}^{t}}, S_{db}^{corrected} = \frac{S_{db}}{1-\beta_{2}^{t}}$
+        - calculate:
+        - $W = W - \alpha \frac{V_{dW}^{corrected}}{\sqrt{S_{dW}^{corrected}} + \epsilon}$
+        - $b = b - \alpha \frac{V_{db}^{corrected}}{\sqrt{S_{db}^{corrected}} + \epsilon}$
+    - Hyperparameters choice
+        - $\alpha$ - needs to be tuned
+        - $\beta_{1} = 0.9$ - beta moment, moving average for momentum is commonly set to 0.9
+        - $\beta_{2} = 0.999$ - second moment, moving acverage squared, set by authors of the algorithm
+        - $\epsilon = 10^{-8}$ - does not impct performance much at all, often not used
+    - Learning rate decay
+        - slowly reduce leraning rate over time
+        - $\alpha = \frac{1}{1 - decay\_rate * epoch\_num} * \alpha_{0}$
+        - another methods:
+            - exponential decay: $\alpha = 0.95^{epoch\_num} \alpha_{0}$ - 0.95 chosen initially
+            - $\alpha = \frac{k}{\sqrt{epoch\_num}} \alpha_{0}$
+            - $\alpha = \frac{k}{\sqrt{t}} \alpha_{0}$ : t=mini batch number
+        - manual decay can also be used based on observation of slow gradient
+        - not oftenly used, there are better ways
 
 ***
 [Math in Markdown](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)
